@@ -43,12 +43,12 @@ app.post('/convert', async (req, res) => {
             }
         });
 
-        // Set response headers to tell the client it's a PDF
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'attachment; filename=HR_Report.pdf');
-
-        // Send the generated PDF buffer as the response
-        res.send(pdfBuffer);
+        res.writeHead(200, {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': 'attachment; filename="report.pdf"',
+            'Content-Length': pdfBuffer.length
+        });
+        res.end(pdfBuffer);
 
     } catch (error) {
         console.error('Error generating PDF:', error);
