@@ -1,0 +1,64 @@
+const express = require('express');
+const puppeteer = require('puppeteer');
+
+const app = express();
+app.use(express.json({ limit: '50mb' }));
+
+const PORT = process.env.PORT || 8080;
+
+// Define API endpoint at the path /convert
+app.post('/convert', async (req, res) => {
+    // Check if HTML content exists in req body
+    if (!req.body.html) {
+        return res.status(400).send({ error: 'HTML content is missing in the request body.' });
+    }
+
+    let browser;
+    try {
+        // Launch a headless browser instance.
+        // The '--no-sandbox' flag is crucial for running in container env
+        browser = await puppeteer.launch({
+            headless: "new",
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
+
+        const page = await browser.newPage();
+
+        // Set the page content to the HTML from req
+        await page.setContent(req.body.html, { waitUntil: 'networkidle0' });
+
+        // Generate the PDF buffer
+        const pdfBuffer = await page.pdf({
+            format: 'A4',
+            printBackground: true,
+            margin: {
+                top: '20px',
+                right: '20px',
+                bottom: '20px',
+                left: '20px'
+            }
+        });
+
+        // Set response headers to tell the client it's a PDF
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename=HR_Report.pdf');
+
+        // Send the generated PDF buffer as the response
+        res.send(pdfBuffer);
+
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        res.status(500).send({ error: 'Failed to generate PDF.' });
+    } finally {
+        // Always close browser instance
+        if (browser) {
+            await browser.close();
+        }
+    }
+});
+
+
+// Start Server
+app.listen(PORT, () => {
+    console.log(`PDF Generator service listening on poert ${PORT}`);
+});
