@@ -6,6 +6,11 @@ app.use(express.json({ limit: '50mb' }));
 
 const PORT = process.env.PORT || 8080;
 
+// Health Check
+app.get('/', (req, res) => {
+    res.status(200).send('PDF Generator Service is online and healthy!');
+});
+
 // Define API endpoint at the path /convert
 app.post('/convert', async (req, res) => {
     // Check if HTML content exists in req body
@@ -60,5 +65,5 @@ app.post('/convert', async (req, res) => {
 
 // Start Server
 app.listen(PORT, () => {
-    console.log(`PDF Generator service listening on poert ${PORT}`);
+    console.log(`PDF Generator service listening on port ${PORT}`);
 });
