@@ -23,7 +23,6 @@ app.post('/convert', async (req, res) => {
         // Launch a headless browser instance.
         // The '--no-sandbox' flag is crucial for running in container env
         browser = await puppeteer.launch({
-            headless: "new",
             args: ['--no-sandbox', '--disable-setuid-sandbox']
         });
 
