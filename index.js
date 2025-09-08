@@ -1,5 +1,6 @@
 const express = require('express');
 const puppeteer = require('puppeteer');
+const htmlToDocx = require('html-to-docx');
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
@@ -58,6 +59,33 @@ app.post('/convert', async (req, res) => {
         if (browser) {
             await browser.close();
         }
+    }
+});
+
+app.post('/convert-to-word', async (req, res) => {
+    // Check if HTML content exists in req body
+    if (!req.body.html) {
+        return res.status(400).send({ error: 'HTML content is missing in the request body.' });
+    }
+
+    try {
+        // Convert the HTML from the request body into a DOCX buffer
+        const docxBuffer = await htmlToDocx(req.body.html, null, {
+            table: { row: { cantSplit: true } },
+            footer: true,
+            pageNumber: true,
+        });
+
+        // Set the correct headers for a .docx file download
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        res.setHeader('Content-Disposition', 'attachment; filename="report.docx"');
+        
+        // Send the buffer as the response
+        res.send(docxBuffer);
+
+    } catch (error) {
+        console.error('Error generating DOCX:', error);
+        res.status(500).send({ error: 'Failed to generate Word document.' });
     }
 });
 
